@@ -20,9 +20,15 @@ interface ApiService {
     suspend fun register(@Body request: UserRegisterRequest) : AuthResponse
 
     @GET("test/chats")
-    suspend fun getMessages(@Header("Authorization") token: String): List<Message>
+    suspend fun getChats(@Header("Authorization") token: String): List<Message>
 
-    @GET("me")
+    @POST("test/messages")
+    suspend fun getMessages(@Header("Authorization") token: String, @Body chatRoomId: Long): List<Message>
+
+    @GET("/me")
     suspend fun getUser(@Header("Authorization") token: String): UserRegisterRequest
+
+    @POST("/test/upload")
+    suspend fun uploadMessage(@Header("Authorization") token: String, @Body message: Message)
 }
 

@@ -1,11 +1,15 @@
 package jg.coursework.customheroesapp.ui.main.view
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,7 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 import androidx.navigation.compose.NavHost
@@ -31,6 +37,7 @@ import androidx.navigation.compose.rememberNavController
 import jg.coursework.customheroesapp.data.api.ApiHelper
 import jg.coursework.customheroesapp.data.api.RetrofitBuilder
 import jg.coursework.customheroesapp.data.model.Message
+import jg.coursework.customheroesapp.ui.main.viewmodel.AuthViewModel
 import jg.coursework.customheroesapp.ui.main.viewmodel.MessageViewModel
 import jg.coursework.customheroesapp.ui.main.viewmodel.MessageViewModelFactory
 import jg.coursework.customheroesapp.ui.theme.CustomHeroesAppTheme
@@ -44,6 +51,7 @@ class MainActivity : ComponentActivity()  {
             PreferenceManager(it)
         } ?: throw IllegalStateException("Application context is null")
     }
+
     private val viewModel: MessageViewModel by viewModels {
         MessageViewModelFactory(
             ApiHelper(
@@ -52,6 +60,7 @@ class MainActivity : ComponentActivity()  {
             )
         )
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -130,22 +139,37 @@ fun HomeScreen() {
 
 @Composable
 fun ChatScreen(viewModel: MessageViewModel) {
+    val context = LocalContext.current
+    val state by viewModel.messages.collectAsState()
     val list = remember { mutableStateOf(viewModel.messages.value) }
     LaunchedEffect(key1 = Unit) {
-        viewModel.getMessages()
-        list.value = viewModel.messages.value
+        viewModel.getChats()
+        list.value = state
         println(list)
     }
-    MessageList(messages = list.value)
+    MessageList(messages = state, context)
+
 }
 
 @Composable
-fun MessageList(messages: List<Message>) {
+fun MessageList(messages: List<Message>, context: Context) {
+    val chatId: Long = 0;
+    val activity = LocalContext.current as Activity
     LazyColumn(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         items(messages) { message ->
             Spacer(modifier = Modifier.height(5.dp))
             Box(modifier = Modifier.background(Color(204,204,255))
-                .fillMaxWidth(0.9f)) {
+                .fillMaxWidth(0.9f)
+                .clickable {
+                    // TODO добавить id чатат в модельку сообщений, а не использвоать костыли по типу пользователя
+                    val intent = Intent(context, ChatActivity::class.java)
+                    intent.putExtra("chatId", message.chatRoomId.toString())
+                    intent.putExtra("fromUser", message.fromUser.toString())
+                    intent.putExtra("toUser", message.toUser.toString())
+                    println(message.chatRoomId)
+                    activity.startActivity(intent)
+                    activity.finish()
+                }) {
                 MessageItem(message)
             }
         }
