@@ -52,7 +52,7 @@ class AuthViewModel(private val apiHelper: ApiHelper, private val preferenceMana
     fun getUserInfo(){
         viewModelScope.launch {
             try {
-                val user = apiHelper.getUser()
+                val user = apiHelper.getMe()
                 preferenceManager.setUser(user)
             }
             catch (e: Exception) {

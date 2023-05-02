@@ -63,10 +63,11 @@ class ChatActivity : ComponentActivity() {
                     val state by viewModel.messages.collectAsState()
                     val list = remember { mutableStateOf(viewModel.messages.value) }
                     val chatId = intent.getStringExtra("chatId")
-                    val fromUser = intent.getStringExtra("fromUser")
-                    val toUser = intent.getStringExtra("toUser")
+                    val fromUser = "TODO"
+                    val toUser = intent.getStringExtra("withUser")
                     var message: MutableState<Message> = remember {
-                        mutableStateOf(Message(fromUser!!.toLong(), fromUser!!.toLong(), toUser!!.toLong(), "", "", chatId!!.toLong()))}
+                        mutableStateOf(Message(fromUser, fromUser,
+                            toUser!!, "", chatId!!.toLong()))}
                     print("chat activity" + chatId.toString())
                     LaunchedEffect(key1 = Unit) {
                         if (chatId != null) {
@@ -77,10 +78,10 @@ class ChatActivity : ComponentActivity() {
                         list.value = state
                     }
                     if (fromUser != null && toUser != null && chatId != null) {
-                        DialogActivity(messages=state, onBackClick = {
+                        DialogActivity(messages = state, onBackClick = {
                             startActivity(Intent(this, MainActivity::class.java))
                             finish()
-                        }, fromUser.toLong(), toUser.toLong(), chatId.toLong(), viewModel )
+                        }, fromUser, toUser, chatId.toLong(), viewModel )
                     }
                 }
             }
@@ -107,8 +108,8 @@ fun MessagesList(messages: List<Message>) {
 fun DialogActivity(
     messages: List<Message>,
     onBackClick: () -> Unit,
-    fromUser: Long,
-    toUser: Long,
+    fromUser: String,
+    toUser: String?,
     chatId: Long,
     viewModel: MessageViewModel
 ) {
@@ -130,14 +131,6 @@ fun DialogActivity(
                 backgroundColor = MaterialTheme.colors.primary
             ) {
                 var message by remember { mutableStateOf("") }
-                IconButton(
-                    onClick = {
-                        viewModel.uploadMessages(Message(fromUser, fromUser,toUser, dateFormat.format(Date()), message, chatId))
-                        message = ""
-                    }
-                ) {
-                    Icon(Icons.Default.Send, contentDescription = "Send")
-                }
                 TextField(
                     value = message,
                     onValueChange = { message = it },
@@ -153,11 +146,19 @@ fun DialogActivity(
                     },
                     keyboardActions = KeyboardActions(
                         onDone = {
-                            viewModel.uploadMessages(Message(fromUser, fromUser,toUser, dateFormat.format(Date()), message, chatId))
+                            viewModel.uploadMessages(Message(fromUser.toString(), toUser.toString(), dateFormat.format(Date()), message, chatId))
                             message = ""
                         }
                     )
                 )
+                IconButton(
+                    onClick = {
+                        viewModel.uploadMessages(Message(fromUser.toString(), toUser.toString(), dateFormat.format(Date()), message, chatId))
+                        message = ""
+                    }
+                ) {
+                    Icon(Icons.Default.Send, contentDescription = "Send")
+                }
             }
         },
         content = {
@@ -166,7 +167,7 @@ fun DialogActivity(
     )
 }
 
-// TODO заменить второго fromuser на того, кто реально отправляет
+
 
 
 
