@@ -20,4 +20,6 @@ class ApiHelper(private val apiService: ApiService, private val preferenceManage
     suspend fun getUser(id: Int) = apiService.getUser("Bearer " + preferenceManager.getAccessToken(), id)
 
     suspend fun getChatNotExist() = apiService.getChatNotExist("Bearer " + preferenceManager.getAccessToken())
+
+    suspend fun createChat(login: String) = apiService.createChat("Bearer " + preferenceManager.getAccessToken(), login)
 }

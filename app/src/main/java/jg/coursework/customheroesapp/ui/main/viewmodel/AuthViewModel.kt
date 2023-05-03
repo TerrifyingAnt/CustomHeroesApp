@@ -28,8 +28,8 @@ class AuthViewModel(private val apiHelper: ApiHelper, private val preferenceMana
             _state.value = AuthState.Loading
             try {
                 val authResponse = apiHelper.auth(request)
-                _state.value = AuthState.Success(authResponse)
                 preferenceManager.setTokens(authResponse)
+                _state.value = AuthState.Success(authResponse)
             } catch (e: Exception) {
                 _state.value = AuthState.Error(e.message ?: "An error occurred")
             }
@@ -41,8 +41,8 @@ class AuthViewModel(private val apiHelper: ApiHelper, private val preferenceMana
             _state.value = AuthState.Loading
             try {
                 val authResponse = apiHelper.register(request)
-                _state.value = AuthState.Success(authResponse)
                 preferenceManager.setTokens(authResponse)
+                _state.value = AuthState.Success(authResponse)
             } catch (e: Exception) {
                 _state.value = AuthState.Error(e.message ?: "An error occurred")
             }

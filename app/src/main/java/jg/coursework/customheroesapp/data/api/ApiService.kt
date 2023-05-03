@@ -30,5 +30,8 @@ interface ApiService {
 
     @GET("test/new-chat-with")
     suspend fun getChatNotExist(@Header("Authorization") token: String): List<String>
+
+    @POST("test/new-chat")
+    suspend fun createChat(@Header("Authorization") token: String, @Body login: String): Chat
 }
 

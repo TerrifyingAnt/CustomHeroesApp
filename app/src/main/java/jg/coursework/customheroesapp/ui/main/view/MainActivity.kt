@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -67,7 +68,6 @@ class MainActivity : ComponentActivity()  {
         )
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -101,14 +101,9 @@ fun scaffoldTemplate(viewModel: MessageViewModel, users: List<String>) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {},
+                title = {Text(text = "CustomHeroes", color = Color.White, modifier = Modifier.fillMaxWidth())},
                 backgroundColor = MaterialTheme.colors.primary,
-            )
-            Column(verticalArrangement = Arrangement.Center) {
-                Row(
-                    horizontalArrangement = Arrangement.Start,
-                ) {
-                    Text(text = "CustomHeroes", color = Color.White)
+                navigationIcon = {
                     IconButton(
                         onClick = {
                             showDialog = true
@@ -121,10 +116,10 @@ fun scaffoldTemplate(viewModel: MessageViewModel, users: List<String>) {
                         )
                     }
                 }
-            }
+            )
 
             if (showDialog) {
-                DialogWithLazyColumn(users, {showDialog = false})
+                DialogWithLazyColumn(viewModel, users, {showDialog = false}, LocalContext.current)
             }
 
         },
@@ -134,7 +129,7 @@ fun scaffoldTemplate(viewModel: MessageViewModel, users: List<String>) {
                 val currentRoute = navBackStackEntry?.destination?.route
 
                 BottomNavigationItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "home") },
                     label = { Text("Home") },
                     selected = currentRoute == "home",
                     onClick = {
@@ -146,7 +141,7 @@ fun scaffoldTemplate(viewModel: MessageViewModel, users: List<String>) {
                 )
 
                 BottomNavigationItem(
-                    icon = { Icon(Icons.Default.Email, contentDescription = null) },
+                    icon = { Icon(Icons.Default.Email, contentDescription = "chats") },
                     label = { Text("Chat") },
                     selected = currentRoute == "chat",
                     onClick = {
@@ -158,14 +153,20 @@ fun scaffoldTemplate(viewModel: MessageViewModel, users: List<String>) {
                 )
             }
         }
-    ) { innerPadding ->
-        NavHost(navController, startDestination = "home") {
-            composable("home") {
-                HomeScreen()
-            }
-            composable("chat") {
-                ChatScreen(viewModel)
-            }
+    ) {
+         innerPadding -> myNavigation(navController, viewModel)
+    }
+
+}
+
+@Composable
+fun myNavigation(navController: NavHostController, viewModel: MessageViewModel) {
+    NavHost(navController, startDestination = "home") {
+        composable("chat") {
+            ChatScreen(viewModel)
+        }
+        composable("home") {
+            HomeScreen()
         }
     }
 }
@@ -191,16 +192,15 @@ fun ChatScreen(viewModel: MessageViewModel) {
 
 @Composable
 fun ChatList(messages: List<Chat>, context: Context) {
-    val chatId: Long = 0;
     val activity = LocalContext.current as Activity
     LazyColumn(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         items(messages) { message ->
             Spacer(modifier = Modifier.height(5.dp))
-            Box(modifier = Modifier
-                .background(Color(204, 204, 255))
+            Box(
+                modifier = Modifier
+                .background(Color(204, 204, 255), shape = RoundedCornerShape(5.dp))
                 .fillMaxWidth(0.9f)
                 .clickable {
-                    // TODO добавить id чатат в модельку сообщений, а не использвоать костыли по типу пользователя
                     val intent = Intent(context, ChatActivity::class.java)
                     intent.putExtra("chatId", message.chatRoomId.toString())
                     intent.putExtra("withUser", message.user)
@@ -228,9 +228,14 @@ fun ChatItem(chatItem: Chat) {
 
 @Composable
 fun DialogWithLazyColumn(
+    viewModel: MessageViewModel,
     users: List<String>,
-    onDismissRequest: () -> Unit
+    onDismissRequest: () -> Unit,
+    context: Context
 ) {
+    val state by viewModel.state.collectAsState(initial = MessageViewModel.ChatState.Loading)
+    val chat by viewModel.chat.collectAsState()
+    val activity = LocalContext.current as Activity
     Dialog(
         onDismissRequest = onDismissRequest
     ) {
@@ -243,16 +248,36 @@ fun DialogWithLazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                items(users) { message ->
+                items(users) { user ->
                     Text(
-                        text = message,
+                        text = user,
                         modifier = Modifier
                             .padding(vertical = 8.dp)
-                            .clickable { //TODO
+                            .clickable {
+                                viewModel.createChat(user)
                             }
+
                     )
                 }
+                when (state) {
+                    is MessageViewModel.ChatState.Loading -> { }
+                    is MessageViewModel.ChatState.Success -> {
+                        val intent = Intent(context, ChatActivity::class.java)
+                        intent.putExtra("chatId", chat.chatRoomId.toString())
+                        intent.putExtra("withUser", chat.user)
+                        print("withUser 8==================D " + chat.user)
+                        activity.startActivity(intent)
+                        activity.finish()
+                    }
+                    is MessageViewModel.ChatState.Error -> {
+                        Toast.makeText(context, "Сетевые неполадки", Toast.LENGTH_LONG).show()
+                    }
+                }
             }
+
         }
     }
+
 }
+
+

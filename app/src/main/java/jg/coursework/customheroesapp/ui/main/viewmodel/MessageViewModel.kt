@@ -20,9 +20,21 @@ class MessageViewModel(private val apiHelper: ApiHelper) : ViewModel() {
     private val _chats = MutableStateFlow<List<Chat>>(emptyList())
     val chats: StateFlow<List<Chat>> = _chats
 
+    private val tempChat: Chat = Chat(0, "")
+    private val _chat = MutableStateFlow<Chat>(tempChat)
+    val chat: StateFlow<Chat> = _chat
+
     private val _chatNotExist = MutableStateFlow<List<String>>(emptyList())
     val chatNotExist: StateFlow<List<String>> = _chatNotExist
 
+    private val _state = MutableStateFlow<ChatState>(ChatState.Loading)
+    val state: StateFlow<ChatState> = _state
+
+    sealed class ChatState {
+        object Loading : ChatState()
+        data class Success(val chat: Chat) : ChatState()
+        data class Error(val message: String) : ChatState()
+    }
     fun getChats() {
         viewModelScope.launch {
             try {
@@ -65,6 +77,23 @@ class MessageViewModel(private val apiHelper: ApiHelper) : ViewModel() {
                 _chatNotExist.tryEmit(newChatsWith)
             } catch (e: Exception) {
                 print("Произошла ошибка в получении списка пользователей для создания нового чата")
+            }
+        }
+    }
+
+    fun createChat(login: String) {
+        viewModelScope.launch {
+            _state.value = ChatState.Loading
+            try {
+                val newChats = apiHelper.createChat(login)
+                print("in viewModel: xd" + newChats)
+                _chat.tryEmit(newChats)
+                _state.value = ChatState.Success(newChats)
+
+            }
+            catch (e: Exception) {
+                print("Произошла ошибка в создания нового чата")
+                print(e)
             }
         }
     }
