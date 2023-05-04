@@ -46,6 +46,7 @@ import jg.coursework.customheroesapp.data.model.Message
 import jg.coursework.customheroesapp.ui.main.viewmodel.AuthViewModel
 import jg.coursework.customheroesapp.ui.main.viewmodel.MessageViewModel
 import jg.coursework.customheroesapp.ui.main.viewmodel.MessageViewModelFactory
+import jg.coursework.customheroesapp.ui.main.viewmodel.WebSocketViewModel
 import jg.coursework.customheroesapp.ui.theme.CustomHeroesAppTheme
 import jg.coursework.customheroesapp.util.PreferenceManager
 import java.util.*
@@ -89,6 +90,7 @@ class MainActivity : ComponentActivity()  {
                     scaffoldTemplate(viewModel, chatNotExist)
                 }
             }
+            val websocket = WebSocketViewModel()
         }
     }
 }
