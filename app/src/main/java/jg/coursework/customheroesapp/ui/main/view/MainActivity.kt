@@ -1,10 +1,10 @@
 package jg.coursework.customheroesapp.ui.main.view
 
+
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,35 +20,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.core.content.ContextCompat.startActivity
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-
-
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import jg.coursework.customheroesapp.data.api.ApiHelper
 import jg.coursework.customheroesapp.data.api.RetrofitBuilder
 import jg.coursework.customheroesapp.data.model.Chat
-import jg.coursework.customheroesapp.data.model.Message
-import jg.coursework.customheroesapp.ui.main.viewmodel.AuthViewModel
 import jg.coursework.customheroesapp.ui.main.viewmodel.MessageViewModel
 import jg.coursework.customheroesapp.ui.main.viewmodel.MessageViewModelFactory
 import jg.coursework.customheroesapp.ui.theme.CustomHeroesAppTheme
 import jg.coursework.customheroesapp.util.PreferenceManager
-import java.util.*
 
 
 class MainActivity : ComponentActivity()  {
@@ -64,11 +54,12 @@ class MainActivity : ComponentActivity()  {
             ApiHelper(
                 RetrofitBuilder.apiService,
                 preferenceManager
-            )
+            ), preferenceManager
         )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
 
         super.onCreate(savedInstanceState)
 
@@ -81,11 +72,34 @@ class MainActivity : ComponentActivity()  {
                 ) {
                     val chatNotExist by viewModel.chatNotExist.collectAsState()
                     val users = remember { mutableStateOf(viewModel.chatNotExist.value) }
+                    val login by viewModel.login.collectAsState()
+                    val loginState by viewModel.loginState.collectAsState(initial = MessageViewModel.LoginState.Loading)
                     LaunchedEffect(key1 = Unit) {
+                        viewModel.getLogin()
                         viewModel.getChatNotExist()
                         print("chat with" + chatNotExist)
                         users.value = chatNotExist
                     }
+                    when (loginState) {
+                        is MessageViewModel.LoginState.Loading -> { }
+                        is MessageViewModel.LoginState.Success -> {
+                            val thread = Thread {
+                                try {
+                                    if (login != "") {
+                                        viewModel.main(login)
+                                        print("8======================D " + login)
+                                    }
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                            thread.start()
+                        }
+                        is MessageViewModel.LoginState.Error -> {
+                            println("Блядский датастор")
+                        }
+                    }
+
                     scaffoldTemplate(viewModel, chatNotExist)
                 }
             }
@@ -198,16 +212,16 @@ fun ChatList(messages: List<Chat>, context: Context) {
             Spacer(modifier = Modifier.height(5.dp))
             Box(
                 modifier = Modifier
-                .background(Color(204, 204, 255), shape = RoundedCornerShape(5.dp))
-                .fillMaxWidth(0.9f)
-                .clickable {
-                    val intent = Intent(context, ChatActivity::class.java)
-                    intent.putExtra("chatId", message.chatRoomId.toString())
-                    intent.putExtra("withUser", message.user)
-                    println(message.chatRoomId)
-                    activity.startActivity(intent)
-                    activity.finish()
-                }) {
+                    .background(Color(204, 204, 255), shape = RoundedCornerShape(5.dp))
+                    .fillMaxWidth(0.9f)
+                    .clickable {
+                        val intent = Intent(context, ChatActivity::class.java)
+                        intent.putExtra("chatId", message.chatRoomId.toString())
+                        intent.putExtra("withUser", message.user)
+                        println(message.chatRoomId)
+                        activity.startActivity(intent)
+                        activity.finish()
+                    }) {
                 ChatItem(message)
             }
         }

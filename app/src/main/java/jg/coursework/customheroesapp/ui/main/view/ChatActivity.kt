@@ -16,12 +16,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -31,7 +29,6 @@ import jg.coursework.customheroesapp.data.model.Message
 import jg.coursework.customheroesapp.ui.main.viewmodel.MessageViewModel
 import jg.coursework.customheroesapp.ui.main.viewmodel.MessageViewModelFactory
 import jg.coursework.customheroesapp.ui.theme.CustomHeroesAppTheme
-import jg.coursework.customheroesapp.ui.theme.Shapes
 import jg.coursework.customheroesapp.util.PreferenceManager
 import java.text.SimpleDateFormat
 import java.util.*
@@ -49,7 +46,8 @@ class ChatActivity : ComponentActivity() {
             ApiHelper(
                 RetrofitBuilder.apiService,
                 preferenceManager
-            )
+            ),
+            preferenceManager
         )
     }
 

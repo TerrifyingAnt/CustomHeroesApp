@@ -67,6 +67,19 @@ class LoginActivity : ComponentActivity() {
 @Composable
 fun AuthScreen(viewModel: AuthViewModel, context: Context) {
     val state by viewModel.state.collectAsState(initial = AuthViewModel.AuthState.Loading)
+    val activity = LocalContext.current as Activity
+
+    when (state) {
+        is AuthViewModel.AuthState.Loading -> { }
+        is AuthViewModel.AuthState.Success -> {
+            viewModel.getUserInfo()
+            activity.startActivity(Intent(context, MainActivity::class.java))
+            activity.finish()
+        }
+        is AuthViewModel.AuthState.Error -> {
+            Toast.makeText(context, "Неправильные логин или пароль", Toast.LENGTH_LONG).show()
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -75,7 +88,6 @@ fun AuthScreen(viewModel: AuthViewModel, context: Context) {
     ) {
         val loginState = remember { mutableStateOf(TextFieldValue()) }
         val passwordState = remember { mutableStateOf(TextFieldValue()) }
-        val activity = LocalContext.current as Activity
 
         Text (text = "Добро пожаловать!")
 
@@ -93,17 +105,7 @@ fun AuthScreen(viewModel: AuthViewModel, context: Context) {
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        when (state) {
-            is AuthViewModel.AuthState.Loading -> { }
-            is AuthViewModel.AuthState.Success -> {
-                viewModel.getUserInfo()
-                activity.startActivity(Intent(context, MainActivity::class.java))
-                activity.finish()
-            }
-            is AuthViewModel.AuthState.Error -> {
-                Toast.makeText(context, "Неправильные логин или пароль", Toast.LENGTH_LONG).show()
-            }
-        }
+
 
         Button(
             onClick = {
@@ -112,7 +114,6 @@ fun AuthScreen(viewModel: AuthViewModel, context: Context) {
                     password = passwordState.value.text
                 )
                 viewModel.authenticateUser(request)
-
             },
             modifier = Modifier.padding(top = 8.dp)
         ) {
