@@ -87,7 +87,6 @@ class MainActivity : ComponentActivity()  {
                                 try {
                                     if (login != "") {
                                         viewModel.main(login)
-                                        print("8======================D " + login)
                                     }
                                 } catch (e: Exception) {
                                     e.printStackTrace()
@@ -95,9 +94,7 @@ class MainActivity : ComponentActivity()  {
                             }
                             thread.start()
                         }
-                        is MessageViewModel.LoginState.Error -> {
-                            println("Блядский датастор")
-                        }
+                        is MessageViewModel.LoginState.Error -> { }
                     }
 
                     scaffoldTemplate(viewModel, chatNotExist)

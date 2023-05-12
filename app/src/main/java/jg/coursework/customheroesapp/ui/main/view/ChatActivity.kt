@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -30,11 +31,12 @@ import jg.coursework.customheroesapp.ui.main.viewmodel.MessageViewModel
 import jg.coursework.customheroesapp.ui.main.viewmodel.MessageViewModelFactory
 import jg.coursework.customheroesapp.ui.theme.CustomHeroesAppTheme
 import jg.coursework.customheroesapp.util.PreferenceManager
+import jg.coursework.customheroesapp.util.Singletone
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ChatActivity : ComponentActivity() {
-
 
     private val preferenceManager: PreferenceManager by lazy {
         applicationContext?.let {
@@ -91,17 +93,22 @@ class ChatActivity : ComponentActivity() {
 }
 
 @Composable
-fun MessagesList(messages: List<Message>, toUser: String) {
-    LazyColumn(modifier = Modifier.fillMaxSize(),
+fun MessagesList(messages: List<Message>, toUser: String, viewModel: MessageViewModel, chatId: Long) {
+    val state by viewModel.messages.collectAsState()
+    when (Singletone.newMessage) {
+        false -> { }
+        true -> { viewModel.getMessages(chatId)}
+    }
+    LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f),
          horizontalAlignment = Alignment.CenterHorizontally) {
-        items(messages) { message ->
+        items(state) { message ->
             Spacer(modifier = Modifier.height(5.dp))
         if(message.toUser == toUser) {
             Row(
                 horizontalArrangement = Arrangement.End,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                MessageItem(message)
+                MessageItem(message, viewModel)
                 Spacer(modifier = Modifier.width(5.dp))
             }
         }
@@ -111,7 +118,7 @@ fun MessagesList(messages: List<Message>, toUser: String) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Spacer(modifier = Modifier.width(5.dp))
-                MessageItem(message)
+                MessageItem(message, viewModel)
                 }
             }
         }
@@ -191,15 +198,15 @@ fun DialogActivity(
         },
         content = {
             if (toUser != null) {
-                MessagesList(messages = messages, toUser)
+                MessagesList(messages = messages, toUser, viewModel, chatId)
             }
-            }
+        }
     )
 }
 
 
 @Composable
-fun MessageItem(message: Message) {
+fun MessageItem(message: Message, viewModel: MessageViewModel) {
     Box(modifier = Modifier
         .background(Color(204, 204, 255),
         shape = RoundedCornerShape(5.dp)

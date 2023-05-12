@@ -3,6 +3,7 @@ package jg.coursework.customheroesapp.ui.main.viewmodel
 import androidx.datastore.preferences.preferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import com.rabbitmq.client.CancelCallback
 import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.DeliverCallback
@@ -11,6 +12,7 @@ import jg.coursework.customheroesapp.data.api.ApiHelper
 import jg.coursework.customheroesapp.data.model.Chat
 import jg.coursework.customheroesapp.data.model.Message
 import jg.coursework.customheroesapp.util.PreferenceManager
+import jg.coursework.customheroesapp.util.Singletone
 import jg.coursework.customheroesapp.util.Status
 import jg.coursework.customheroesapp.util.Status.LOADING
 import jg.coursework.customheroesapp.util.Status.SUCCESS
@@ -133,12 +135,14 @@ class MessageViewModel(private val apiHelper: ApiHelper, private val preferenceM
         println("[$consumerTag] Waiting for messages...")
         val deliverCallback = DeliverCallback { consumerTag: String?, delivery: Delivery ->
             val message = String(delivery.body, StandardCharsets.UTF_8)
-            println("[$consumerTag] Received message: '$message'")
+            var gson = Gson()
+            var mMineUserEntity = gson?.fromJson(message, Message::class.java)
+            println("[$consumerTag] Received message: '${mMineUserEntity?.content}'")
+            Singletone.newMessage = true
         }
         val cancelCallback = CancelCallback { consumerTag: String? ->
             println("[$consumerTag] was canceled")
         }
-
         channel.basicConsume(login, true, consumerTag, deliverCallback, cancelCallback)
     }
 
